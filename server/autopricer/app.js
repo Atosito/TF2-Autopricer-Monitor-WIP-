@@ -3,7 +3,8 @@ const { default: PQueue } = require('p-queue');
 const rp = require('request-promise');
 const jsonfile = require('jsonfile');
 const SKU = require('tf2-sku');
-
+const mongoose = require('mongoose');
+const connectMongo = require('../db/index');
 const utils = require('./utils/utils');
 const enums = require('./utils/enums');
 const dbManager = require('../db/manager');
@@ -125,6 +126,7 @@ class Updater {
 
     async init() {
         try {
+            await connectMongo(mongoose);
             this.apikeys = process.env.APIKEYS.split(',');
             this.itemsList = await itemDB.find({}).lean();
             this.keyPrice = await this.getBPKeyPrice(this.itemsList.filter(obj => obj.sku == '5021;6')[0])
