@@ -11,7 +11,8 @@ const dbManager = require('../db/manager');
 const itemDB = require('../db/models/item');
 const snapDB = require('../db/models/snapshot');
 
-const SKU = require('tf2-sku');
+
+const sleep = ms => new Promise(res => setTimeout(res, ms));
 
 class Updater {
     constructor(io) {
@@ -42,7 +43,6 @@ class Updater {
             await sleep(utils.getDelay(this.apikeys.length));
             let input = this.getItemInput(item);
             let data = await dbManager.getClassifieds(input, item.name, this.ignores);
-            this.checkProfitable(data, item.sku);
             let newSnapshot = this.createSnapshot(data, item.sku);
             let newSave = await dbManager.updateSnapshot(item.sku, newSnapshot);
             if (this.socket) {
@@ -72,7 +72,6 @@ class Updater {
                     metal: (buyFiltered[i].currencies.metal) ? buyFiltered[i].currencies.metal : 0,
                     scraps: (buyFiltered[i].currencies.metal) ? utils.refinedToScrap(buyFiltered[i].currencies.metal) : 0,
                     totalInScraps: scraps,
-                    usd_cents: this.scrapsToUsd(scraps)
                 },
                 details: buyFiltered[i].details,
                 steamID64: buyFiltered[i].steamid,
@@ -90,7 +89,6 @@ class Updater {
                     metal: (sellFiltered[i].currencies.metal) ? sellFiltered[i].currencies.metal : 0,
                     scraps: (sellFiltered[i].currencies.metal) ? utils.refinedToScrap(sellFiltered[i].currencies.metal) : 0,
                     totalInScraps: scraps,
-                    usd_cents: this.scrapsToUsd(scraps)
                 },
                 details: sellFiltered[i].details,
                 steamID64: sellFiltered[i].steamid,
@@ -238,7 +236,6 @@ class Updater {
             obj['common'] = Number(getMostCommon(buyValues)[0])
             obj['last'] = snapshot.buy[snapshot.buy.length - 1].price.totalInScraps;
             for (var i = 0; i < 2; i++) {
-                console.log(snapshot.buy[i].price.totalInScraps)
                 prom += snapshot.buy[i].price.totalInScraps
             }
             obj['average'] = (Number(Math.floor(prom / i)) == 0) ? 0.5 : Number(Math.floor(prom / i));
@@ -260,7 +257,6 @@ class Updater {
             obj['common'] = Number(getMostCommon(sellValues)[0])
             obj['last'] = snapshot.sell[snapshot.sell.length - 1].price.totalInScraps;
             for (var i = 0; i < 2; i++) {
-                console.log(snapshot.sell[i].price.totalInScraps)
                 prom += snapshot.sell[i].price.totalInScraps
             }
             obj['average'] = (Number(Math.floor(prom / i)) == 0) ? 0.5 : Number(Math.floor(prom / i));
